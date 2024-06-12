@@ -1,10 +1,10 @@
-package com.crudSpring.CRUD.Spring.Simples;
+package com.letterboxAPI;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CrudSpringSimplesApplicationTests {
+class LetterboxApplicationTests {
 
 	@Test
 	void contextLoads() {
