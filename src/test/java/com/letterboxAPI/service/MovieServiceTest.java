@@ -11,15 +11,14 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MovieServiceTest {
-
     @Mock
     private MovieRepository movieRepository;
-
     @InjectMocks
     private MovieService movieService;
 
@@ -41,12 +40,6 @@ class MovieServiceTest {
         assertEquals("Test Movie", createdMovie.getTitle());
         verify(movieRepository, times(1)).save(movie);
     }
-
-    @Test
-    @DisplayName("Should trow Exception when add a new movie is not allowed.")
-    void addMovieCase2() {
-    }
-
     @Test
     @DisplayName("Should return a movie specified by id.")
     void getMovie() {
@@ -61,12 +54,62 @@ class MovieServiceTest {
         assertEquals("Test Movie", foundMovie.get().getTitle());
         verify(movieRepository, times(1)).findById(1L);
     }
-
     @Test
-    void updateMovie() {
+    @DisplayName("Should update an existing movie.")
+    void testUpdateMovie() {
+        Movie existingMovie = new Movie();
+        existingMovie.setId(1L);
+        existingMovie.setTitle("Old Title");
+
+        Movie updatedDetails = new Movie();
+        updatedDetails.setTitle("New Title");
+
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(existingMovie));
+        when(movieRepository.save(any(Movie.class))).thenReturn(existingMovie);
+
+        Movie updatedMovie = movieService.updateMovie(1L, updatedDetails);
+
+        assertEquals("New Title", updatedMovie.getTitle());
+        verify(movieRepository, times(1)).findById(1L);
+        verify(movieRepository, times(1)).save(existingMovie);
     }
-
     @Test
-    void deleteMovie() {
+    @DisplayName("Should throw Exception when update a movie is not allowed because the movie is not found.")
+    void testUpdateMovieNotFound() {
+        when(movieRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Movie updatedDetails = new Movie();
+
+        assertThrows(RuntimeException.class, () -> {
+            movieService.updateMovie(1L, updatedDetails);
+        });
+
+        verify(movieRepository, times(1)).findById(1L);
+        verify(movieRepository, never()).save(any(Movie.class));
+    }
+    @Test
+    @DisplayName("Should delete an existing movie.")
+    void testDeleteMovie() {
+        Movie movie = new Movie();
+        movie.setId(1L);
+
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
+
+        movieService.deleteMovie(1L);
+
+        verify(movieRepository, times(1)).findById(1L);
+        verify(movieRepository, times(1)).delete(movie);
+    }
+    @Test
+    @DisplayName("Should throw Exception when delete a movie is not allowed because the movie is not found.")
+    void testDeleteMovieNotFound() {
+        when(movieRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> {
+            movieService.deleteMovie(1L);
+        });
+
+        verify(movieRepository, times(1)).findById(1L);
+        verify(movieRepository, never()).delete(any(Movie.class));
     }
 }
